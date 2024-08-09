@@ -1,0 +1,1369 @@
+
+------->Login<-------
+
+import org.w3c.dom.events.Event;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.*;
+
+public class Login extends JFrame implements ActionListener {
+
+    JButton login,clear,signup;
+    JTextField cardtextfield;
+    JPasswordField pintextfield;
+    Login(){
+        setLayout(null);
+
+        setTitle("AUTOMATED TELLER MACHINE");
+
+        ImageIcon i1=new ImageIcon(ClassLoader.getSystemResource("bank.jpg"));
+        Image i2= i1.getImage().getScaledInstance(100,100,100);
+        ImageIcon i3=new ImageIcon(i2);
+        JLabel label=new JLabel(i3);
+        label.setBounds(70,10,100,100);
+        add(label);
+        getContentPane().setBackground(Color.WHITE);
+
+        JLabel text=new JLabel("Welcome to ATM");
+        text.setFont(new Font("Osward", Font.BOLD,38));
+        text.setBounds(200,40,400,40);
+        add(text);
+
+        JLabel cardno=new JLabel("Card No:");
+        cardno.setFont(new Font("Raleway", Font.BOLD,38));
+        cardno.setBounds(120,150,150,40);
+        add(cardno);
+
+         cardtextfield=new JTextField();
+        cardtextfield.setBounds(300,150,250,40);
+        cardtextfield.setFont(new Font("Arial",Font.BOLD,26));
+        add(cardtextfield);
+
+        JLabel Pin=new JLabel("PIN:");
+        Pin.setFont(new Font("Raleway", Font.BOLD,38));
+        Pin.setBounds(120,220,150,100);
+        add(Pin);
+
+         pintextfield=new JPasswordField();
+        pintextfield.setBounds(300,250,250,40);
+        pintextfield.setFont(new Font("Arial",Font.BOLD,26));
+        add(pintextfield);
+
+        login=new JButton("SIGN IN");
+        login.setBounds(300,310,100,30);
+        login.setBackground(Color.BLACK);
+        login.setForeground(Color.WHITE);
+        login.addActionListener(this);
+        add(login);
+
+         clear=new JButton("CLEAR");
+        clear.setBounds(450,310,100,30);
+        clear.setBackground(Color.BLACK);
+        clear.setForeground(Color.WHITE);
+        clear.addActionListener(this);
+        add(clear);
+
+         signup=new JButton("SIGN UP");
+        signup.setBounds(300,370,250,30);
+        signup.setBackground(Color.BLACK);
+        signup.setForeground(Color.WHITE);
+        signup.addActionListener(this);
+        add(signup);
+
+        setSize(800,480);
+        setVisible(true);
+        setLocation(350,280);
+    }
+
+    public void actionPerformed(ActionEvent ae){
+        if(ae.getSource() == clear){
+            cardtextfield.setText("");
+            pintextfield.setText("");
+        }else if(ae.getSource() == login){
+            conn c=new conn();
+            String Cardnumber=cardtextfield.getText();
+            String Pinnumber=pintextfield.getText();
+            String query = "select * from login where cardnumber = '"+Cardnumber+"' and pinnumber = '"+Pinnumber+"'";
+            try{
+                ResultSet rs =c.s.executeQuery(query);
+                if(rs.next()){
+                    setVisible(false);
+                    new Transactions(Pinnumber).setVisible(true);
+                }else{
+                    JOptionPane.showMessageDialog(null,"Incorrect Card Number or Pin");
+                }
+            }catch (Exception e){
+                System.out.println(e);
+            }
+
+        }else if(ae.getSource()==signup){
+            setVisible(false);
+            new signupone().setVisible(true);
+        }
+
+    }
+
+    public static void main(String[] args) {
+        Login lg=new Login();
+    }
+}
+
+------->Mini statement<-------
+
+
+import javax.swing.*;
+import java.awt.*;
+import java.sql.ResultSet;
+
+public class Ministatement  extends JFrame {
+
+    Ministatement(String pinnumber){
+
+        setTitle("Mini Statement");
+
+        setLayout(null);
+
+        JLabel mini=new JLabel();
+        add(mini);
+
+        JLabel bank=new JLabel("Indian Bank");
+        bank.setBounds(150,20,100,10);
+        add(bank);
+
+        JLabel card=new JLabel();
+        card.setBounds(20,80,300,20);
+        add(card);
+
+        JLabel balance=new JLabel();
+        balance.setBounds(20,400,300,20);
+        add(balance);
+
+        try{
+            conn c=new conn();
+            //int bal=0;
+            ResultSet rs =c.s.executeQuery("select * from login where pinnumber = '"+pinnumber+"' ");
+            while(rs.next()){
+                card.setText("Card Number: " + rs.getString("cardnumber").substring(0,4) + "XXXXXXXX" + rs.getString("cardnumber").substring(12));
+//                if(rs.getString("type").equals("Deposit")){
+//                    bal += Integer.parseInt(rs.getString("amount"));
+//                }else{
+//                    bal -= Integer.parseInt(rs.getString("amount"));
+//                }
+            }
+            //balance.setText("Your Current Account Balance is Rs "+ bal);
+        }catch(Exception e){
+            System.out.println(e);
+        }
+        try{
+            conn c=new conn();
+            int bal=0;
+            ResultSet rs=c.s.executeQuery("select * from bank where pin = '"+pinnumber+"' ");
+            while(rs.next()){
+                mini.setText(mini.getText() + "<html>" + rs.getString("date") + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + rs.getString("type") + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" + rs.getString("amount") +"<br><br><html>");
+                if(rs.getString("type").equals("Deposit")){
+                    bal += Integer.parseInt(rs.getString("amount"));
+                }else{
+                    bal -= Integer.parseInt(rs.getString("amount"));
+                }
+            }
+            balance.setText("Your Current Account Balance is Rs "+ bal);
+        }catch(Exception e){
+            System.out.println(e);
+        }
+
+        mini.setBounds(20,140,400,200);
+
+        setSize(400,600);
+        setLocation(20,20);
+        getContentPane().setBackground(Color.WHITE);
+        setVisible(true);
+    }
+    public static void main(String[] args) {
+         new Ministatement("");
+    }
+}
+
+------->fastcash<-------
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.ResultSet;
+import java.util.Date;
+
+public class fastcash extends JFrame implements ActionListener {
+
+
+    JButton deposit,balanceenquiry,fastcash,ministatement,pinchange,withdrawl,exit;
+    String pinnumber;
+    fastcash(String pinnumber){
+        this.pinnumber=pinnumber;
+        setLayout(null);
+
+        ImageIcon i1=new ImageIcon(ClassLoader.getSystemResource("atm.jpg"));
+        Image i2=i1.getImage().getScaledInstance(900,900, Image.SCALE_DEFAULT);
+        ImageIcon i3=new ImageIcon(i2);
+        JLabel image=new JLabel(i3);
+        image.setBounds(0,0,900,900);
+        add(image);
+
+        JLabel text =new JLabel("Select Withdrawl Amount");
+        text.setBounds(375,275,700,35);
+        text.setForeground(Color.WHITE);
+        text.setFont(new Font("System",Font.BOLD,14));
+        image.add(text);
+
+        deposit =new JButton("Rs 100");
+        deposit.setBounds(375,340,80,25);
+        deposit.addActionListener(this);
+        image.add(deposit);
+
+        balanceenquiry =new JButton("Rs 500");
+        balanceenquiry.setBounds(375,380,80,25);
+        balanceenquiry.addActionListener(this);
+        image.add(balanceenquiry);
+
+        fastcash =new JButton("Rs 1000");
+        fastcash.setBounds(375,420,80,25);
+        fastcash.addActionListener(this);
+        image.add(fastcash);
+
+        ministatement =new JButton("Rs 2000");
+        ministatement.setBounds(460,340,100,25);
+        ministatement.addActionListener(this);
+        image.add(ministatement);
+
+        pinchange =new JButton("Rs 5000");
+        pinchange.setBounds(460,380,100,25);
+        pinchange.addActionListener(this);
+        image.add(pinchange);
+
+        withdrawl =new JButton("Rs 10000");
+        withdrawl.setBounds(460,420,100,25);
+        withdrawl.addActionListener(this);
+        image.add(withdrawl);
+
+        exit =new JButton("Back");
+        exit.setBounds(375,450,80,25);
+        exit.addActionListener(this);
+        image.add(exit);
+
+
+
+        setSize(900,900);
+        setLocation(300,0);
+        setUndecorated(true);
+        setVisible(true);
+
+
+    }
+
+    public void actionPerformed(ActionEvent ae){
+        if (ae.getSource() == exit){
+            setVisible(false);
+            new Transactions(pinnumber).setVisible(true);
+        }else {
+            String amount=((JButton)ae.getSource()).getText().substring(3);
+            conn c=new conn();
+            try{
+
+                ResultSet rs=c.s.executeQuery("select * from bank where pin = '"+pinnumber+"' ");
+                int balance =0;
+                while(rs.next()){
+                    if(rs.getString("type").equals("Deposit")){
+                        balance +=Integer.parseInt(rs.getString("amount"));
+                    }else{
+                        balance -= Integer.parseInt(rs.getString("amount"));
+                    }
+                }
+                if(ae.getSource() != exit && balance < Integer.parseInt(amount)){
+                    JOptionPane.showMessageDialog(null,"Insufficient Balance");
+                    return;
+                }
+                Date date =new Date();
+                String query = "insert into bank values('" + pinnumber + "','" + date + "' , 'Withdrawl' ,'" + amount + "')";
+                c.s.executeUpdate(query);
+                JOptionPane.showMessageDialog(null,"Rs " + amount + "Debited Successfully");
+
+                setVisible(false);
+                new Transactions(pinnumber).setVisible(true);
+            }catch (Exception e){
+                System.out.println(e);
+            }
+        }
+    }
+
+
+    public static void main(String[] args) {
+
+        new fastcash("");
+    }
+}
+
+------->Deposit<-------
+
+import javax.print.event.PrintJobAttributeListener;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.*;
+
+public class Deposit extends JFrame implements ActionListener {
+
+    JButton deposit,back;
+    JTextField amount;
+    String pinnumber;
+    Deposit(String pinnumber){
+        this.pinnumber=pinnumber;
+        setLayout(null);
+
+        ImageIcon i1=new ImageIcon(ClassLoader.getSystemResource("atm.jpg"));
+        Image i2=i1.getImage().getScaledInstance(900,900, Image.SCALE_DEFAULT);
+        ImageIcon i3 = new ImageIcon(i2);
+        JLabel image=new JLabel(i3);
+        image.setBounds(0,0,900,900);
+        add(image);
+
+        JLabel text= new JLabel("Enter amount to deposit");
+        text.setForeground(Color.WHITE);
+        text.setFont(new Font("System",Font.BOLD,16));
+        text.setBounds(365,265,250,16);
+        image.add(text);
+
+         amount= new JTextField();
+        amount.setFont(new Font("Raleway",Font.BOLD,16));
+        amount.setBounds(370,290,180,18);
+        image.add(amount);
+
+         deposit=new JButton("Deposit");
+        deposit.setBounds(400,385,150,20);
+        deposit.addActionListener(this);
+        image.add(deposit);
+
+         back=new JButton("Back");
+        back.setBounds(400,420,150,20);
+        back.addActionListener(this);
+        image.add(back);
+
+        setSize(900,900);
+        setLocation(300,0);
+        setVisible(true);
+
+    }
+
+    public void actionPerformed(ActionEvent ae){
+        if(ae.getSource()==deposit){
+            String number=amount.getText();
+            Date date=new Date();
+            if(number.equals("")){
+                JOptionPane.showMessageDialog(null,"Please Enter the amount you want to doposit");
+            }else {
+                try {
+                    conn c = new conn();
+                    String query = "insert into bank values('" + pinnumber + "','" + date + "' , 'Deposit' ,'" + number + "')";
+                    c.s.executeUpdate(query);
+                    JOptionPane.showMessageDialog(null, "Rs " + number + " Deposit Successfully");
+                    setVisible(false);
+                    new Transactions(pinnumber).setVisible(true);
+                }catch (Exception e){
+                    System.out.println(e);
+                }
+            }
+        }else if(ae.getSource()==back){
+            setVisible(false);
+            new Transactions(pinnumber).setVisible(true);
+        }
+    }
+
+    public static void main(String[] args) {
+        new Deposit("");
+    }
+}
+
+------->signup one<-------
+
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.*;
+import com.toedter.calendar.JDateChooser;
+import java.awt.event.*;
+
+
+
+public class signupone extends JFrame implements ActionListener  {
+
+    long random;
+    JTextField nametextfield,fnametextfield,emailtextfield,addreshtextfield,citytextfield,statetextfield,pintextfield,dobtextfield;
+    JButton button;
+    JRadioButton male,female,other,married,unmarried;
+    JDateChooser dateChooser;
+    signupone() {
+
+        setLayout(null);
+
+        getContentPane().setBackground(Color.WHITE);
+
+        Random ran = new Random();
+        random = Math.abs((ran.nextLong() % 9000l) + 1000l);
+        JLabel formno = new JLabel("APPLICATION FORM No.  " + random);
+        formno.setFont(new Font("Raleway", Font.BOLD, 36));
+        formno.setBounds(120, 20, 650, 40);
+        add(formno);
+
+        JLabel personaldetail = new JLabel("Page 1: Personal Details ");
+        personaldetail.setFont(new Font("Raleway", Font.BOLD, 22));
+        personaldetail.setBounds(290, 80, 400, 30);
+        add(personaldetail);
+
+        JLabel name = new JLabel("Name: ");
+        name.setFont(new Font("Raleway", Font.BOLD, 20));
+        name.setBounds(100, 120, 100, 30);
+        add(name);
+
+         nametextfield = new JTextField();
+        nametextfield.setFont(new Font("Raleway", Font.BOLD, 14));
+        nametextfield.setBounds(300, 120, 400, 30);
+        add(nametextfield);
+
+        JLabel fname = new JLabel("Father Name: ");
+        fname.setFont(new Font("Raleway", Font.BOLD, 20));
+        fname.setBounds(100, 170, 200, 30);
+        add(fname);
+
+         fnametextfield = new JTextField();
+        fnametextfield.setFont(new Font("Raleway", Font.BOLD, 14));
+        fnametextfield.setBounds(300, 170, 400, 30);
+        add(fnametextfield);
+
+        JLabel DOB = new JLabel("Date of Birth: ");
+        DOB.setFont(new Font("Raleway", Font.BOLD, 20));
+        DOB.setBounds(100, 220, 150, 30);
+        add(DOB);
+
+        dateChooser = new JDateChooser();
+        dateChooser.setBounds(300, 220, 400, 30);
+        dateChooser.setForeground(Color.BLACK);
+        add(dateChooser);
+
+        JLabel gender = new JLabel("Gender: ");
+        gender.setFont(new Font("Raleway", Font.BOLD, 20));
+        gender.setBounds(100, 270, 200, 30);
+        add(gender);
+
+        male = new JRadioButton("Male");
+        male.setBounds(300, 270, 60, 30);
+        male.setBackground(Color.WHITE);
+        add(male);
+
+        female = new JRadioButton("Female");
+        female.setBounds(400, 270, 120, 30);
+        female.setBackground(Color.WHITE);
+        add(female);
+
+        other = new JRadioButton("Other");
+        other.setBounds(530, 270, 60, 30);
+        other.setBackground(Color.WHITE);
+        add(other);
+
+        ButtonGroup buttongroup = new ButtonGroup();
+        buttongroup.add(male);
+        buttongroup.add(female);
+        buttongroup.add(other);
+
+        JLabel email = new JLabel("Email: ");
+        email.setFont(new Font("Raleway", Font.BOLD, 20));
+        email.setBounds(100, 320, 300, 30);
+        add(email);
+
+        emailtextfield = new JTextField();
+        emailtextfield.setFont(new Font("Raleway", Font.BOLD, 14));
+        emailtextfield.setBounds(300, 320, 400, 30);
+        add(emailtextfield);
+
+        JLabel maritalstatus = new JLabel("Marital Status: ");
+        maritalstatus.setFont(new Font("Raleway", Font.BOLD, 20));
+        maritalstatus.setBounds(100, 370, 200, 30);
+        add(maritalstatus);
+
+        married = new JRadioButton("Married");
+        married.setBounds(300, 370, 120, 30);
+        married.setBackground(Color.WHITE);
+        add(married);
+
+        unmarried = new JRadioButton("Unmarried");
+        unmarried.setBounds(440, 370, 120, 30);
+        unmarried.setBackground(Color.WHITE);
+        add(unmarried);
+
+        ButtonGroup buttongroup1 = new ButtonGroup();
+        buttongroup1.add(married);
+        buttongroup1.add(unmarried);
+
+
+        JLabel address = new JLabel("Address: ");
+        address.setFont(new Font("Raleway", Font.BOLD, 20));
+        address.setBounds(100, 420, 200, 30);
+        add(address);
+
+        addreshtextfield = new JTextField();
+        addreshtextfield.setFont(new Font("Raleway", Font.BOLD, 14));
+        addreshtextfield.setBounds(300, 420, 400, 30);
+        add(addreshtextfield);
+
+        JLabel city = new JLabel("City: ");
+        city.setFont(new Font("Raleway", Font.BOLD, 20));
+        city.setBounds(100, 470, 200, 30);
+        add(city);
+
+        citytextfield = new JTextField();
+        citytextfield.setFont(new Font("Raleway", Font.BOLD, 14));
+        citytextfield.setBounds(300, 470, 400, 30);
+        add(citytextfield);
+
+        JLabel state = new JLabel("State: ");
+        state.setFont(new Font("Raleway", Font.BOLD, 20));
+        state.setBounds(100, 520, 200, 30);
+        add(state);
+
+        statetextfield = new JTextField();
+        statetextfield.setFont(new Font("Raleway", Font.BOLD, 14));
+        statetextfield.setBounds(300, 520, 400, 30);
+        add(statetextfield);
+
+        JLabel pincode = new JLabel("Pin Code: ");
+        pincode.setFont(new Font("Raleway", Font.BOLD, 20));
+        pincode.setBounds(100, 570, 200, 30);
+        add(pincode);
+
+        pintextfield = new JTextField();
+        pintextfield.setFont(new Font("Raleway", Font.BOLD, 14));
+        pintextfield.setBounds(300, 570, 400, 30);
+        add(pintextfield);
+
+        button = new JButton("Next");
+        button.setForeground(Color.white);
+        button.setBackground(Color.black);
+        button.setFont(new Font("Raleway", Font.BOLD, 16));
+        button.setBounds(450, 650, 100, 30);
+        button.addActionListener(this);
+        add(button);
+
+        setSize(850, 800);
+        setLocation(350, 10);
+        setVisible(true);
+
+    }
+    public void actionPerformed(ActionEvent ae) {
+        String formno = "" + random;
+        String name = nametextfield.getText();
+        String fname = fnametextfield.getText();
+        String dob = ((JTextField) dateChooser.getDateEditor().getUiComponent()).getText();
+        String gender = null;
+        if (male.isSelected()) {
+            gender = "male";
+        } else if (female.isSelected()) {
+            gender = "female";
+        } else if (other.isSelected()) {
+            gender = "other";
+        }
+        String email = emailtextfield.getText();
+        String marital = null;
+        if (married.isSelected()) {
+            marital = "marrried";
+        } else if (unmarried.isSelected()) {
+            marital = "unmarried";
+        }
+        String addresh = addreshtextfield.getText();
+        String city = citytextfield.getText();
+        String state = statetextfield.getText();
+        String pin = pintextfield.getText();
+
+        try{
+            if(name.equals("")){
+                JOptionPane.showMessageDialog(null,"Name is required");
+            }else{
+                conn c=new conn();
+                String query="insert into signup values('"+formno+"' ,'"+name+"' ,'"+fname+"' ,'"+dob+"' ,'"+gender+"' ,'"+email+"' ,'"+marital+"' ,'"+addresh+"' ,'"+city+"' ,'"+state+"' ,'"+pin+"')";
+                c.s.executeUpdate(query);
+            }
+        }catch(Exception e){
+            System.out.println(e);
+        }
+        setVisible(false);
+        new signupTwo(formno).setVisible(true);
+    }
+    public static void main (String[] args){
+
+        new signupone();
+            }
+}
+
+------->signup two<-------
+
+import com.toedter.calendar.JDateChooser;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.sql.SQLException;
+import java.util.Random;
+
+public class signupTwo extends JFrame implements ActionListener {
+
+        long random;
+        JTextField pan,aadhar;
+        JButton button;
+        JRadioButton syes,sno,eyes,eno;
+        JComboBox religion,category,income,valeduation,occupation;
+        String formno;
+        signupTwo(String formno) {
+            this.formno=formno;
+            setLayout(null);
+
+            getContentPane().setBackground(Color.WHITE);
+
+            setTitle("NEW ACCOUNT APPLICATION PAGE --2");
+
+
+            JLabel additionaldetail = new JLabel("Page 2: Additional Details ");
+            additionaldetail.setFont(new Font("Raleway", Font.BOLD, 22));
+            additionaldetail.setBounds(290, 80, 400, 30);
+            add(additionaldetail);
+
+            JLabel name = new JLabel("Religion: ");
+            name.setFont(new Font("Raleway", Font.BOLD, 20));
+            name.setBounds(100, 120, 100, 30);
+            add(name);
+
+            String valreligion[]={"Hindu","Muslim","Christian","sikh"};
+             religion=new JComboBox(valreligion);
+            religion.setBounds(300, 120, 400, 30);
+            religion.setBackground(Color.WHITE);
+            add(religion);
+
+
+            JLabel Category = new JLabel("Category: ");
+            Category.setFont(new Font("Raleway", Font.BOLD, 20));
+            Category.setBounds(100, 170, 200, 30);
+            add(Category);
+
+            String valcategory[]={"General","ST/SC","OBC"};
+            category=new JComboBox(valcategory);
+            category.setBackground(Color.WHITE);
+            category.setBounds(300, 170, 400, 30);
+            add(category);
+
+
+            JLabel Income = new JLabel("Income: ");
+            Income.setFont(new Font("Raleway", Font.BOLD, 20));
+            Income.setBounds(100, 220, 150, 30);
+            add(Income);
+
+            String valincome[]={"Null","<100000","<150000","up to 150000"};
+            income=new JComboBox(valincome);
+            income.setBackground(Color.WHITE);
+            income.setBounds(300, 220, 400, 30);
+            add(income);
+
+
+            JLabel education = new JLabel("Educational");
+            education.setFont(new Font("Raleway", Font.BOLD, 20));
+            education.setBounds(100, 270, 200, 30);
+            add(education);
+
+            String educationvalues[]={"8th","10th","12th","Graduate"};
+             valeduation=new JComboBox(educationvalues);
+            valeduation.setBackground(Color.WHITE);
+            valeduation.setBounds(300, 280, 400, 30);
+            add(valeduation);
+
+            JLabel qualification = new JLabel("Qualification: ");
+            qualification.setFont(new Font("Raleway", Font.BOLD, 20));
+            qualification.setBounds(100, 295, 300, 30);
+            add(qualification);
+
+
+            JLabel Occupation = new JLabel("Occupation: ");
+            Occupation.setFont(new Font("Raleway", Font.BOLD, 20));
+            Occupation.setBounds(100, 370, 200, 30);
+            add(Occupation);
+
+            String occupationvalues[]={"Salaried","Self-employed","Business man","Farmer"};
+             occupation=new JComboBox(occupationvalues);
+            occupation.setBackground(Color.WHITE);
+            occupation.setBounds(300, 370, 400, 30);
+            add(occupation);
+
+
+            JLabel Pan = new JLabel("PAN NO: ");
+            Pan.setFont(new Font("Raleway", Font.BOLD, 20));
+            Pan.setBounds(100, 420, 200, 30);
+            add(Pan);
+
+            pan = new JTextField();
+            pan.setFont(new Font("Raleway", Font.BOLD, 14));
+            pan.setBounds(300, 420, 400, 30);
+            add(pan);
+
+            JLabel Aadhar = new JLabel("Aadhar No: ");
+            Aadhar.setFont(new Font("Raleway", Font.BOLD, 20));
+            Aadhar.setBounds(100, 470, 200, 30);
+            add(Aadhar);
+
+            aadhar = new JTextField();
+            aadhar.setFont(new Font("Raleway", Font.BOLD, 14));
+            aadhar.setBounds(300, 470, 400, 30);
+            add(aadhar);
+
+            JLabel senior= new JLabel("Senior Citizen: ");
+            senior.setFont(new Font("Raleway", Font.BOLD, 20));
+            senior.setBounds(100, 520, 200, 30);
+            add(senior);
+
+            syes = new JRadioButton("Yes");
+            syes.setBounds(300, 520, 120, 30);
+            syes.setBackground(Color.WHITE);
+            add(syes);
+
+            sno = new JRadioButton("No");
+            sno.setBounds(440, 520, 120, 30);
+            sno.setBackground(Color.WHITE);
+            add(sno);
+
+            ButtonGroup buttongroup1 = new ButtonGroup();
+            buttongroup1.add(syes);
+            buttongroup1.add(sno);
+
+
+            JLabel exist = new JLabel("Exisiting Account: ");
+            exist.setFont(new Font("Raleway", Font.BOLD, 20));
+            exist.setBounds(100, 570, 200, 30);
+            add(exist);
+
+            eyes = new JRadioButton("Yes");
+            eyes.setBounds(300, 570, 120, 30);
+            eyes.setBackground(Color.WHITE);
+            add(eyes);
+
+            eno = new JRadioButton("No");
+            eno.setBounds(440, 570, 120, 30);
+            eno.setBackground(Color.WHITE);
+            add(eno);
+
+            ButtonGroup buttongroup2 = new ButtonGroup();
+            buttongroup1.add(syes);
+            buttongroup1.add(sno);
+
+            button = new JButton("Next");
+            button.setForeground(Color.white);
+            button.setBackground(Color.black);
+            button.setFont(new Font("Raleway", Font.BOLD, 16));
+            button.setBounds(450, 650, 100, 30);
+            button.addActionListener(this);
+            add(button);
+
+            setSize(850, 800);
+            setLocation(350, 10);
+            setVisible(true);
+
+        }
+        public void actionPerformed(ActionEvent ae) {
+            String formno = "" + random;
+            String sreligion = (String) religion.getSelectedItem();
+            String scategory = (String) category.getSelectedItem();
+            String sincome = (String) income.getSelectedItem();
+            String seducation = (String) valeduation.getSelectedItem();
+            String soccupation = (String) occupation.getSelectedItem();
+            String senior = null;
+            if (syes.isSelected()) {
+                senior = "Yes";
+            } else if (sno.isSelected()) {
+                senior = "No";
+            }
+            String span = pan.getText();
+            String exixting = null;
+            if (eyes.isSelected()) {
+                exixting = "Yes";
+            } else if (eno.isSelected()) {
+                exixting = "No";
+            }
+            String saadhar = aadhar.getText();
+
+
+            try {
+                conn c = new conn();
+                String query = "insert into signup2 values('" + formno + "' ,'" + sreligion + "' ,'" + scategory + "' ,'" + sincome + "' ,'" + seducation + "' ,'" + soccupation + "' ,'" + senior + "' ,'" + span + "' ,'" + exixting + "','" + saadhar + "')";
+                c.s.executeUpdate(query);
+
+                setVisible(false);
+                new signupThree(formno).setVisible(true);
+
+            } catch (Exception e) {
+                System.out.println(e);
+            }
+        }
+        public static void main (String[] args){
+
+            new signupTwo("");
+        }
+    }
+
+------->signup three<-------
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.Random;
+
+
+public class signupThree extends JFrame implements ActionListener {
+
+    JRadioButton r1,r2,r3,r4;
+    JCheckBox c1,c2,c3,c4,c5,c6,c7;
+    JButton sumbit ,cancel;
+    String formno;
+
+     signupThree(String formno){
+         this.formno=formno;
+         setLayout(null);
+
+        JLabel l1=new JLabel("Page 3: Account Details");
+        l1.setFont(new Font("Raleway",Font.BOLD,22));
+        l1.setBounds(280,40,400,40);
+        add(l1);
+
+         JLabel type=new JLabel("Account type");
+         type.setFont(new Font("Raleway",Font.BOLD,22));
+         type.setBounds(100,140,200,40);
+         add(type);
+
+         r1=new JRadioButton("Saving Account");
+         r1.setFont(new Font("Raleway",Font.BOLD,20));
+         r1.setBackground(Color.WHITE);
+         r1.setBounds(100,190,240,20);
+         add(r1);
+
+         r2=new JRadioButton("Fixed Deposite Account");
+         r2.setFont(new Font("Raleway",Font.BOLD,20));
+         r2.setBackground(Color.WHITE);
+         r2.setBounds(350,190,240,20);
+         add(r2);
+
+         r3=new JRadioButton("Current Account");
+         r3.setFont(new Font("Raleway",Font.BOLD,20));
+         r3.setBackground(Color.WHITE);
+         r3.setBounds(100,220,240,20);
+         add(r3);
+
+         r4=new JRadioButton("Reccuring Deposite Account");
+         r4.setFont(new Font("Raleway",Font.BOLD,20));
+         r4.setBackground(Color.WHITE);
+         r4.setBounds(350,220,240,20);
+         add(r4);
+
+         ButtonGroup groupaccount=new ButtonGroup();
+         groupaccount.add(r1);
+         groupaccount.add(r2);
+         groupaccount.add(r3);
+         groupaccount.add(r4);
+
+         JLabel card=new JLabel("Card Number");
+         card.setFont(new Font("Raleway",Font.BOLD,22));
+         card.setBounds(100,300,250,40);
+         add(card);
+
+         JLabel number=new JLabel("XXXX-XXXX-XXXX-4135");
+         number.setFont(new Font("Raleway",Font.BOLD,22));
+         number.setBounds(350,300,300,30);
+         add(number);
+
+         JLabel carddetail=new JLabel("Your 16 digit card number");
+         carddetail.setFont(new Font("Raleway",Font.BOLD,12));
+         carddetail.setBounds(100,330,300,30);
+         add(carddetail);
+
+         JLabel pin=new JLabel("Pin: ");
+         pin.setFont(new Font("Raleway",Font.BOLD,22));
+         pin.setBounds(100,370,250,30);
+         add(pin);
+
+         JLabel pnumber=new JLabel("XXXX");
+         pnumber.setFont(new Font("Raleway",Font.BOLD,22));
+         pnumber.setBounds(350,370,100,30);
+         add(pnumber);
+
+         JLabel pindetail=new JLabel("Your 4 digit pin number");
+         pindetail.setFont(new Font("Raleway",Font.BOLD,12));
+         pindetail.setBounds(100,400,300,30);
+         add(pindetail);
+
+         JLabel services=new JLabel("Services Provider: ");
+         services.setFont(new Font("Raleway",Font.BOLD,22));
+         services.setBounds(100,470,250,30);
+         add(services);
+
+         c1=new JCheckBox("ATM Card");
+         c1.setFont(new Font("Raleway",Font.BOLD,16));
+         c1.setBackground(Color.WHITE);
+         c1.setBounds(100,520,200,30);
+         add(c1);
+
+         c2=new JCheckBox("E-statement");
+         c2.setFont(new Font("Raleway",Font.BOLD,16));
+         c2.setBackground(Color.WHITE);
+         c2.setBounds(350,520,200,30);
+         add(c2);
+         c3=new JCheckBox("Internet Banking");
+         c3.setFont(new Font("Raleway",Font.BOLD,16));
+         c3.setBackground(Color.WHITE);
+         c3.setBounds(100,570,200,30);
+         add(c3);
+         c4=new JCheckBox("Mobile Banking");
+         c4.setFont(new Font("Raleway",Font.BOLD,16));
+         c4.setBackground(Color.WHITE);
+         c4.setBounds(350,570,200,30);
+         add(c4);
+         c5=new JCheckBox("Email and Bussiness alerts");
+         c5.setFont(new Font("Raleway",Font.BOLD,16));
+         c5.setBackground(Color.WHITE);
+         c5.setBounds(100,620,200,30);
+         add(c5);
+         c6=new JCheckBox("Check Book");
+         c6.setFont(new Font("Raleway",Font.BOLD,16));
+         c6.setBackground(Color.WHITE);
+         c6.setBounds(350,620,200,30);
+         add(c6);
+         c7=new JCheckBox("I hereby declares that the above entered details are correct two the best of my knowledge");
+         c7.setFont(new Font("Raleway",Font.BOLD,12));
+         c7.setBackground(Color.WHITE);
+         c7.setBounds(100,670,700,30);
+         add(c7);
+
+         sumbit=new JButton(("Submit"));
+         sumbit.setFont(new Font("Raleway",Font.BOLD,14));
+         sumbit.setBackground(Color.BLACK);
+         sumbit.setForeground(Color.WHITE);
+         sumbit.setBounds(250,710,100,30);
+         sumbit.addActionListener(this);
+         add(sumbit);
+
+         cancel=new JButton(("Cancel"));
+         cancel.setFont(new Font("Raleway",Font.BOLD,14));
+         cancel.setBackground(Color.BLACK);
+         cancel.setForeground(Color.WHITE);
+         cancel.setBounds(370,710,100,30);
+         cancel.addActionListener(this);
+         add(cancel);
+
+         getContentPane().setBackground(Color.WHITE);
+        setSize(800,820);
+        setLocation(350,0);
+        setVisible(true);
+
+         }
+         public void actionPerformed(ActionEvent ae){
+         if(ae.getSource()==sumbit){
+                String accounttype=null;
+                if(r1.isSelected()){
+                    accounttype="Saving Account";
+                }else if(r2.isSelected()){
+                    accounttype="Fixed Deposite Account";
+                }else if(r3.isSelected()) {
+                    accounttype = "Current Account";
+                }else if(r4.isSelected()){
+                    accounttype="Reccuring Deposite Account";
+                }
+                Random random=new Random();
+                String cardnumber=""+ Math.abs((random.nextLong() % 90000000L) + 50409000000000L);
+
+                String pinnumber=""+ Math.abs((random.nextLong() % 9000L) +1000L);
+
+                String facility="";
+                if(c1.isSelected()){
+                    facility=facility+"ATM Card";
+                }else if(c2.isSelected()){
+                    facility=facility+"E-Statement";
+                }else if(c3.isSelected()) {
+                    facility = facility + "Internet Banking";
+                }else if(c4.isSelected()) {
+                    facility = facility + "Mobile Banking";
+                }else if(c5.isSelected()) {
+                    facility = facility + "Email and Bussiness alerts";
+                }else if(c6.isSelected()) {
+                    facility = facility + "Check Book";
+                }
+
+                try{
+                    if(accounttype.equals("")){
+                        JOptionPane.showMessageDialog(null,"Account type is required");
+                    }else{
+                        conn c=new conn();
+                        String query1="Insert into signupthree values('"+formno+"','"+accounttype+"','"+cardnumber+"','"+pinnumber+"','"+facility+"')";
+                        String query2="Insert into login values('"+formno+"','"+cardnumber+"','"+pinnumber+"')";
+                        c.s.executeUpdate(query1);
+                        c.s.executeUpdate(query2);
+
+                        JOptionPane.showMessageDialog(null,"Card Number: "+cardnumber+ "\n Pin: "+pinnumber);
+
+                        setVisible(false);
+                        new Deposit(pinnumber).setVisible(true);
+
+                    }
+                }catch (Exception e){
+                    System.out.println(e);
+                }
+
+         }else if(ae.getSource()==cancel){
+             setVisible(false);
+             new Login().setVisible(true);
+         }
+         }
+
+
+    public static void main(String[] args) {
+        new signupThree("");
+    }
+
+}
+------->Withdrawl<-------
+
+//import javax.swing.*;
+
+//public class Withdrawl {
+//}
+import javax.print.event.PrintJobAttributeListener;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.util.*;
+
+public class Withdrawl extends JFrame implements ActionListener {
+
+    JButton withdrawl,back;
+    JTextField amount;
+    String pinnumber;
+    Withdrawl(String pinnumber){
+        this.pinnumber=pinnumber;
+        setLayout(null);
+
+        ImageIcon i1=new ImageIcon(ClassLoader.getSystemResource("atm.jpg"));
+        Image i2=i1.getImage().getScaledInstance(900,900, Image.SCALE_DEFAULT);
+        ImageIcon i3 = new ImageIcon(i2);
+        JLabel image=new JLabel(i3);
+        image.setBounds(0,0,900,900);
+        add(image);
+
+        JLabel text= new JLabel("Enter amount to Withdraw");
+        text.setForeground(Color.WHITE);
+        text.setFont(new Font("System",Font.BOLD,14));
+        text.setBounds(375,275,230,16);
+        image.add(text);
+
+        amount= new JTextField();
+        amount.setFont(new Font("Raleway",Font.BOLD,16));
+        amount.setBounds(370,300,180,18);
+        image.add(amount);
+
+        withdrawl=new JButton("Withdraw");
+        withdrawl.setBounds(400,385,150,20);
+        withdrawl.addActionListener(this);
+        image.add(withdrawl);
+
+        back=new JButton("Back");
+        back.setBounds(400,420,150,20);
+        back.addActionListener(this);
+        image.add(back);
+
+        setSize(900,900);
+        setLocation(300,0);
+        setVisible(true);
+
+    }
+
+    public void actionPerformed(ActionEvent ae){
+        if(ae.getSource()==withdrawl){
+            String number=amount.getText();
+            Date date=new Date();
+            if(number.equals("")){
+                JOptionPane.showMessageDialog(null,"Please Enter the amount you want to withdraw");
+            }else {
+                try {
+                    conn c = new conn();
+                    String query = "insert into bank values('" + pinnumber + "','" + date + "' , 'Withdrawl' ,'" + number + "')";
+                    c.s.executeUpdate(query);
+                    JOptionPane.showMessageDialog(null, "Rs " + number + "  Withdrawl Successfully");
+                    setVisible(false);
+                    new Transactions(pinnumber).setVisible(true);
+                }catch (Exception e){
+                    System.out.println(e);
+                }
+            }
+        }else if(ae.getSource()==back){
+            setVisible(false);
+            new Transactions(pinnumber).setVisible(true);
+        }
+    }
+
+    public static void main(String[] args) {
+        new Withdrawl("");
+    }
+}
+
+
+------->Transaction<-------
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class Transactions extends JFrame implements ActionListener {
+
+
+    JButton deposit,balanceenquiry,fastcash,ministatement,pinchange,withdrawl,exit;
+     String pinnumber;
+    Transactions(String pinnumber){
+        this.pinnumber=pinnumber;
+        setLayout(null);
+
+        ImageIcon i1=new ImageIcon(ClassLoader.getSystemResource("atm.jpg"));
+        Image i2=i1.getImage().getScaledInstance(900,900, Image.SCALE_DEFAULT);
+        ImageIcon i3=new ImageIcon(i2);
+        JLabel image=new JLabel(i3);
+        image.setBounds(0,0,900,900);
+        add(image);
+
+        JLabel text =new JLabel("Please Select Your Transcation");
+        text.setBounds(375,275,700,35);
+        text.setForeground(Color.WHITE);
+        text.setFont(new Font("System",Font.BOLD,12));
+        image.add(text);
+
+         deposit =new JButton("Deposit");
+        deposit.setBounds(375,340,80,25);
+        deposit.addActionListener(this);
+        image.add(deposit);
+
+         balanceenquiry =new JButton("Balance Enquiry");
+        balanceenquiry.setBounds(375,380,80,25);
+        balanceenquiry.addActionListener(this);
+        image.add(balanceenquiry);
+
+         fastcash =new JButton(" FastCash");
+        fastcash.setBounds(375,420,80,25);
+        fastcash.addActionListener(this);
+        image.add(fastcash);
+
+         ministatement =new JButton("MiniStatement");
+        ministatement.setBounds(460,340,100,25);
+        ministatement.addActionListener(this);
+        image.add(ministatement);
+
+         pinchange =new JButton("Pinchange");
+        pinchange.setBounds(460,380,100,25);
+        pinchange.addActionListener(this);
+        image.add(pinchange);
+
+        withdrawl =new JButton("withdrawl");
+        withdrawl.setBounds(460,420,100,25);
+        withdrawl.addActionListener(this);
+        image.add(withdrawl);
+
+         exit =new JButton("Exit");
+        exit.setBounds(375,450,80,25);
+        exit.addActionListener(this);
+        image.add(exit);
+
+
+
+        setSize(900,900);
+        setLocation(300,0);
+        setUndecorated(true);
+        setVisible(true);
+
+
+    }
+
+    public void actionPerformed(ActionEvent ae){
+        if (ae.getSource() == exit){
+            System.exit(0);
+        }else if(ae.getSource() == deposit){
+            setVisible(false);
+            new Deposit(pinnumber).setVisible(true);
+        }else if(ae.getSource() == withdrawl){
+            setVisible(false);
+            new Withdrawl(pinnumber).setVisible(true);
+        }else if(ae.getSource() == fastcash){
+            setVisible(false);
+            new fastcash(pinnumber).setVisible(true);
+        }else if (ae.getSource()== pinchange){
+            setVisible(false);
+            new Pinchange(pinnumber).setVisible(true);
+        }else if(ae.getSource()==balanceenquiry){
+            setVisible(false);
+            new BalanceEnquery(pinnumber).setVisible(true);
+        }else if(ae.getSource()==ministatement){
+            setVisible(false);
+            new Ministatement(pinnumber).setVisible(true);
+        }
+    }
+
+
+    public static void main(String[] args) {
+        new Transactions("");
+    }
+}
+
+------->pin change<-------
+import javax.sql.RowSetListener;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+
+public class Pinchange extends JFrame implements ActionListener {
+
+    JPasswordField pin,repin;
+    JButton change,back;
+
+    String pinnumber;
+
+    Pinchange(String pinnumber){
+
+        this.pinnumber=pinnumber;
+        setLayout(null);
+
+        ImageIcon i1=new ImageIcon(ClassLoader.getSystemResource("atm.jpg"));
+        Image i2=i1.getImage().getScaledInstance(900,900, Image.SCALE_DEFAULT);
+        ImageIcon i3=new ImageIcon(i2);
+        JLabel image=new JLabel(i3);
+        image.setBounds(0,0,900,900);
+        add(image);
+
+        JLabel text=new JLabel("CHANGE YOUR PIN");
+        text.setForeground(Color.WHITE);
+        text.setFont(new Font("System",Font.BOLD,16));
+        text.setBounds(380,280,500,35);
+        image.add(text);
+
+        JLabel pintext=new JLabel("NEW PIN");
+        pintext.setForeground(Color.WHITE);
+        pintext.setFont(new Font("System",Font.BOLD,14));
+        pintext.setBounds(370,310,100,25);
+        image.add(pintext);
+
+         pin =new JPasswordField();
+        pin.setFont(new Font("Raleway",Font.BOLD,14));
+        pin.setBounds(460,310,90,25);
+        image.add(pin);
+
+
+        JLabel repintext=new JLabel("RE-ENTER ");
+        repintext.setForeground(Color.WHITE);
+        repintext.setFont(new Font("System",Font.BOLD,14));
+        repintext.setBounds(370,340,100,25);
+        image.add(repintext);
+
+        JLabel repintext2=new JLabel("NEW PIN");
+        repintext2.setForeground(Color.WHITE);
+        repintext2.setFont(new Font("System",Font.BOLD,14));
+        repintext2.setBounds(370,360,100,25);
+        image.add(repintext2);
+
+         repin =new JPasswordField();
+        repin.setFont(new Font("Raleway",Font.BOLD,14));
+        repin.setBounds(460,340,90,25);
+        image.add(repin);
+
+         change=new JButton("CHANGE");
+        change.setBounds(420,380,100,25);
+        change.addActionListener(this);
+        image.add(change);
+
+         back=new JButton("BACK");
+        back.setBounds(420,415,100,25);
+        back.addActionListener(this);
+        image.add(back);
+
+        setSize(900,900);
+        setLocation(300,0);
+        setUndecorated(true);
+        setVisible(true);
+
+
+    }
+
+    public void actionPerformed(ActionEvent ae) {
+        if (ae.getSource() == change) {
+            try {
+                String npin = pin.getText();
+                String rpin = repin.getText();
+                if (!rpin.equals(npin)) {
+                    JOptionPane.showMessageDialog(null, "Entered PIN does not match");
+                    return;
+                }
+                if(npin.equals("")){
+                    JOptionPane.showMessageDialog(null, "Please Enter PIN");
+                    return;
+                }
+                if(rpin.equals("")){
+                    JOptionPane.showMessageDialog(null, "Please Re-Enter new PIN");
+                    return;
+                }
+
+                conn c=new conn();
+                String query1="update bank set pin = '"+rpin+"' where pin = '"+pinnumber+"' ";
+                String query2="update login set pinnumber = '"+rpin+"' where pinnumber = '"+pinnumber+"' ";
+                String query3="update signupthree set pinnumber = '"+rpin+"' where pinnumber = '"+pinnumber+"' ";
+
+                c.s.executeUpdate(query1);
+                c.s.executeUpdate(query2);
+                c.s.executeUpdate(query3);
+
+                JOptionPane.showMessageDialog(null, "PIN change successfully");
+
+                setVisible(false);
+                new Transactions(rpin).setVisible(true);
+
+            } catch (Exception e) {
+                System.out.println(e);
+            }
+        }
+        else{
+            setVisible(false);
+            new Transactions(pinnumber).setVisible(true);
+        }
+    }
+
+    public static void main(String[] args) {
+        new Pinchange("").setVisible(true);
+    }
+}
+------>my connection<-------
+import java.sql.*;
+public class conn {
+    Connection c;
+    Statement s;
+    public conn(){
+        try{
+            c=DriverManager.getConnection("jdbc:mysql:///bankmanagementsystem","root","Singh@9660");
+            s = c.createStatement();
+        }catch(Exception e){
+            System.out.println(e);
+        }
+    }
+}
+
+
